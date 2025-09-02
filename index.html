@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>家務小遊戲</title>
+  <style>
+    body { font-family: "Microsoft JhengHei", sans-serif; background: #fff8f0; color: #333; text-align: center; padding: 30px; }
+    .card { background: #fff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; margin: 20px auto; max-width: 600px; }
+    button { margin: 10px; padding: 10px 20px; border: none; border-radius: 8px; background: #ff8c8c; color: #fff; font-size: 16px; cursor: pointer; }
+    button:hover { background: #ff6b6b; }
+    #game, #result, #luckyDraw { display: none; }
+    .reward-card { border: 2px dashed #ff6b6b; padding: 20px; margin-top: 20px; font-size: 20px; font-weight: bold; color: #ff6b6b; }
+    #timer { font-weight: bold; color: #d33; }
+    .prize-table { margin-top: 20px; font-size: 16px; }
+    .prize-table table { margin: 0 auto; border-collapse: collapse; }
+    .prize-table th, .prize-table td { border: 1px solid #ccc; padding: 8px 12px; }
+  </style>
+</head>
+<body>
+  <h1>🧹 家務小遊戲 🧹</h1>
+  <div id="start" class="card">
+    <p>👦 角色：Kanas 小朋友</p>
+    <p>準備挑戰隨機 10 條問題！（每題 35 秒）</p>
+    <div class="prize-table">
+      <p>🎁 <strong>獎品表</strong></p>
+      <table>
+        <tr><th>答對題數</th><th>獎品</th></tr>
+        <tr><td>1–6</td><td>🔁 請重新作答</td></tr>
+        <tr><td>7</td><td>🍽 免洗碗一次</td></tr>
+        <tr><td>8</td><td>👕 免浪衫一次</td></tr>
+        <tr><td>9</td><td>🌱 免剪草一次</td></tr>
+        <tr><td>10</td><td>🍲 選擇今晚食咩一次</td></tr>
+      </table>
+    </div>
+    <button onclick="startGame()">開始遊戲</button>
+  </div>
+
+  <div id="game" class="card">
+    <p id="question"></p>
+    <div id="choices"></div>
+    <p>⏳ 剩餘時間：<span id="timer">35</span> 秒</p>
+    <p>分數：<span id="score">0</span></p>
+    <p>題目 <span id="qnum">0</span>/10</p>
+  </div>
+
+  <div id="result" class="card">
+    <p id="finalScore"></p>
+    <div id="reward" class="reward-card"></div>
+    <button onclick="startGame()">重新挑戰</button>
+    <button onclick="startLuckyDraw()">🎯 轉轉樂抽獎</button>
+  </div>
+
+  <div id="luckyDraw" class="card">
+    <p>🎯 抽獎結果：</p>
+    <div id="drawResult" class="reward-card"></div>
+    <button onclick="startGame()">再玩一次</button>
+  </div>
+
+  <script>
+    const questions = [
+      { q: "地球係咩形狀？", opts: ["圓形", "方形", "煎pan形", "三角形"], ans: "圓形" },
+      { q: "煮飯前要做咩？", opts: ["洗米", "洗碗", "睇電視", "打機"], ans: "洗米" },
+      { q: "水喺幾度會結冰？", opts: [0, 100, "睇心情", -10], ans: 0 },
+      { q: "Kanas 唔想洗碗，佢應該？", opts: ["食紙餐具", "唔食飯", "用魔法", "叫姐姐洗"], ans: "食紙餐具" },
+      { q: "香港最高嘅山係？", opts: ["大帽山", "獅子山", "摩天大廈", "太平山"], ans: "大帽山" },
+      { q: "拖地前要做咩？", opts: ["掃地", "洗碗", "摺衫", "煮飯"], ans: "掃地" },
+      { q: "太陽係咩？", opts: ["星星", "月亮", "燈泡", "火球"], ans: "星星" },
+      { q: "🐶🐱🐭。第一個係咩？", opts: ["🐭", "🐱", "🐶", "🐷"], ans: "🐶" },
+      { q: "人每日要飲幾多水？", opts: ["2 公升", "10 公升", "1 杯", "唔洗飲"], ans: "2 公升" },
+      { q: "洗衫後要做咩？", opts: ["晾衫", "煮飯", "掃地", "打機"], ans: "晾衫" },
+      { q: "垃圾應該點處理？", opts: ["分類回收", "丟街", "燒掉", "藏起來"], ans: "分類回收" },
+      { q: "食飯前要做咩？", opts: ["洗手", "唱歌", "打掃", "洗碗"], ans: "洗手" },
+      { q: "電器用完要？", opts: ["關掉", "丟掉", "賣掉", "唔理佢"], ans: "關掉" },
+      { q: "衣服洗完要？", opts: ["晾乾", "放地上", "放雪櫃", "丟掉"], ans: "晾乾" },
+      { q: "煮飯用咩工具？", opts: ["電飯煲", "風筒", "電視", "洗衣機"], ans: "電飯煲" },
+      { q: "地板髒咗要？", opts: ["掃地", "打機", "睇戲", "食飯"], ans: "掃地" },
+      { q: "唔想浪衫可以？", opts: ["摺好", "丟掉", "唔著", "放床底"], ans: "摺好" },
+      { q: "屋企有蟑螂要？", opts: ["清潔", "養佢", "拍照", "放生"], ans: "清潔" },
+      { q: "煮完飯要？", opts: ["洗碗", "打機", "睇戲", "食甜品"], ans: "洗碗" },
+      { q: "垃圾桶滿咗要？", opts: ["倒垃圾", "加垃圾", "唔理佢", "放雪櫃"], ans: "倒垃圾" },
+      { q: "邊個唔係家務？", opts: ["打機", "洗碗", "掃地", "摺衫"], ans: "打機" },
+      { q: "雪櫃應該幾耐清潔一次？", opts: ["每月", "每日", "唔洗", "每年"], ans: "每月" },
+      { q: "邊樣唔可以放入洗衣機？", opts: ["手機", "襪", "T恤", "毛巾"], ans: "手機" },
+      { q: "邊個唔係清潔工具？", opts: ["吸塵機", "掃把", "滑鼠", "拖把"], ans: "滑鼠" },
+      { q: "煮飯時唔小心燒焦，應該？", opts: ["熄火", "打電話比消防", "繼續煮", "自拍"], ans: "熄火" },
+      { q: "邊樣唔係廚房用品？", opts: ["煎pan", "雪櫃", "電視", "電飯煲"], ans: "電視" },
+      { q: "洗廁所要用咩？", opts: ["廁所刷", "牙刷", "筷子", "拖鞋"], ans: "廁所刷" },
+      { q: "邊樣唔係晾衫方法？", opts: ["用衣架", "掛窗簾", "曬太陽", "用乾衣機"], ans: "掛窗簾" },
+      { q: "洗碗時發現碗裂咗，應該？", opts: ["換個", "繼續用", "煮湯", "收藏"], ans: "換個" },
+      { q: "邊樣唔係垃圾分類？", opts: ["紙類", "膠類", "金魚", "金屬"], ans: "金魚" },
+      { q: "邊樣唔係晾衫地點？", opts: ["陽台", "廁所", "雪櫃", "天台"], ans: "雪櫃" },
+      { q: "邊樣唔係家居清潔劑？", opts: ["漂白水", "洗潔精", "汽水", "玻璃水"], ans: "汽水" },
+      { q: "邊樣唔係家務？", opts: ["打掃", "煮飯", "睇戲", "洗衫"], ans: "睇戲" },
+      { q: "洗完手要？", opts: ["抹乾", "拍手", "唱歌", "打機"], ans: "抹乾" },
+      { q: "邊樣唔係煮食工具？", opts: ["鍋", "刀", "風筒", "砧板"], ans: "風筒" },
+      { q: "邊樣唔係清潔用品？", opts: ["洗衣粉", "洗潔精", "牙膏", "漂白水"], ans: "牙膏" },
+      { q: "邊樣唔係晾衫工具？", opts: ["衣架", "曬衣繩", "風扇", "夾子"], ans: "風扇" },
+      { q: "邊樣唔係廚房電器？", opts: ["微波爐", "電飯煲", "電視", "焗爐"], ans: "電視" },
+      { q: "邊樣唔係家居雜務？", opts: ["洗碗", "摺衫", "打掃", "打機"], ans: "打機" }
+    ];
+
+    let score = 0;
+    let current = 0;
+    let selected = [];
+    let timer;
+    let timeLeft = 35;
+
+    function startGame() {
+      document.getElementById("start").style.display = "none";
+      document.getElementById("result").style.display = "none";
+      document.getElementById("luckyDraw").style.display = "none";
+      document.getElementById("game").style.display = "block";
+      selected = questions.sort(() => Math.random() - 0.5).slice(0, 10);
+      score = 0;
+      current = 0;
+      document.getElementById("score").innerText = score;
+      showQuestion();
+    }
+
+    function showQuestion() {
+      if (current >= selected.length) {
+        endGame();
+        return;
+      }
+      const q = selected[current];
+      document.getElementById("question").innerText = q.q;
+      const choicesDiv = document.getElementById("choices");
+      choicesDiv.innerHTML = "";
+      q.opts.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(opt, q.ans);
+        choicesDiv.appendChild(btn);
+      });
+      document.getElementById("qnum").innerText = current + 1;
+
+      clearInterval(timer);
+      timeLeft = 35;
+      document.getElementById("timer").innerText = timeLeft;
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").innerText = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          nextQuestion();
+        }
+      }, 1000);
+    }
+
+    function checkAnswer(choice, correct) {
+      if (choice === correct) score++;
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      clearInterval(timer);
+      current++;
+      document.getElementById("score").innerText = score;
+      showQuestion();
+    }
+
+    function endGame() {
+      document.getElementById("game").style.display = "none";
+      document.getElementById("result").style.display = "block";
+      document.getElementById("finalScore").innerText = `你一共答中 ${score} 題！`;
+
+      let reward = "🔁 請重新作答";
+      if (score === 10) reward = "🍲 選擇今晚食咩一次";
+      else if (score === 9) reward = "🌱 免剪草一次";
+      else if (score === 8) reward = "👕 免浪衫一次";
+      else if (score === 7) reward = "🍽 免洗碗一次";
+
+      document.getElementById("reward").innerText = reward;
+    }
+
+    function startLuckyDraw() {
+      document.getElementById("result").style.display = "none";
+      document.getElementById("luckyDraw").style.display = "block";
+      const prize = Math.floor(Math.random() * 20) === 0 ? "🎉 外出吃飯！" : "🍛 在家吃飯～";
+      document.getElementById("drawResult").innerText = prize;
+    }
+  </script>
+</body>
+</html>
