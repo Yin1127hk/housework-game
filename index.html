@@ -14,44 +14,6 @@
     .prize-table { margin-top: 20px; font-size: 16px; }
     .prize-table table { margin: 0 auto; border-collapse: collapse; }
     .prize-table th, .prize-table td { border: 1px solid #ccc; padding: 8px 12px; }
-/* Lucky Draw 美化樣式 */
-#luckyDraw {
-  background: radial-gradient(circle at center, #fff0e6 0%, #ffd6d6 100%);
-  border: 4px solid #d40000;
-  border-radius: 20px;
-  padding: 40px 20px;
-  position: relative;
-  overflow: hidden;
-}
-
-#wheel {
-  width: 200px;
-  height: 200px;
-  margin: 20px auto;
-  border-radius: 50%;
-  border: 10px solid gold;
-  background: conic-gradient(
-    #ffcc00 0% 18%,
-    #ff6666 18% 36%,
-    #ffcc00 36% 54%,
-    #ff6666 54% 72%,
-    #ffcc00 72% 90%,
-    #ff6666 90% 100%
-  );
-  position: relative;
-  transition: transform 4s ease-out;
-}
-
-#pointer {
-  width: 0;
-  height: 0;
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-bottom: 30px solid #d40000;
-  position: absolute;
-  top: -30px;
-  left: calc(50% - 20px);
-}
   </style>
 </head>
 <body>
@@ -88,16 +50,11 @@
     <button onclick="startLuckyDraw()">🎯 轉轉樂抽獎</button>
   </div>
 
-<div id="luckyDraw" class="card">
-  <!-- 🔻 這兩個是轉盤動畫元素 🔻 -->
-  <div id="pointer"></div>
-  <div id="wheel"></div>
-
-  <!-- 🔻 抽獎結果文字區域 🔻 -->
-  <p>🎯 抽獎結果：</p>
-  <div id="drawResult" class="reward-card"></div>
-  <button onclick="startGame()">再玩一次</button>
-</div>
+  <div id="luckyDraw" class="card">
+    <p>🎯 抽獎結果：</p>
+    <div id="drawResult" class="reward-card"></div>
+    <button onclick="startGame()">再玩一次</button>
+  </div>
 
   <script>
     const questions = [
@@ -216,34 +173,12 @@
       document.getElementById("reward").innerText = reward;
     }
 
-   
-function startLuckyDraw() {
-  document.getElementById("result").style.display = "none";
-  document.getElementById("luckyDraw").style.display = "block";
-
-  const wheel = document.getElementById("wheel");
-  const drawResult = document.getElementById("drawResult");
-
-  // 隨機決定是否中獎（1/20 機率）
-  const isWin = Math.floor(Math.random() * 20) === 0;
-
-  // 計算轉盤角度（模擬轉 5 圈再停在某格）
-  const baseAngle = isWin ? 54 : 18; // 指向金色或紅色區塊
-  const totalRotation = 360 * 5 + baseAngle;
-
-  // 套用動畫
-  wheel.style.transition = "transform 4s ease-out";
-  wheel.style.transform = `rotate(${totalRotation}deg)`;
-
-  // 顯示「抽獎中...」
-  drawResult.innerText = "🎯 抽獎中...";
-
-  // 4 秒後顯示結果
-  setTimeout(() => {
-    drawResult.innerText = isWin ? "🎉 外出吃飯！" : "🍛 在家吃飯～";
-  }, 4000);
-}
+    function startLuckyDraw() {
+      document.getElementById("result").style.display = "none";
+      document.getElementById("luckyDraw").style.display = "block";
+      const prize = Math.floor(Math.random() * 20) === 0 ? "🎉 外出吃飯！" : "🍛 在家吃飯～";
+      document.getElementById("drawResult").innerText = prize;
+    }
   </script>
 </body>
-
 </html>
